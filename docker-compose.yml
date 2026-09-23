@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: fintrack-db
+    environment:
+      MYSQL_DATABASE: fintrackdb
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: dbuser
+      MYSQL_PASSWORD: dbpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: fintrack-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/fintrackdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=dbuser
+      - SPRING_DATASOURCE_PASSWORD=dbpassword
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - JWT_SECRET=b0e4f6a9c2d1e3f5a8b7c6d9e1f2a4c6b9d3e7f0a5c8d2e7f1a9b3c5d7e9f0a1
+      - JWT_EXPIRATIONMS=86400000
+    restart: unless-stopped
+
+volumes:
+  mysql-data:

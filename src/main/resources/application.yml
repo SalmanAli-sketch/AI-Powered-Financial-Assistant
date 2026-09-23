@@ -1,0 +1,47 @@
+spring:
+  profiles:
+    active: dev
+
+jwt:
+  secret: b0e4f6a9c2d1e3f5a8b7c6d9e1f2a4c6b9d3e7f0a5c8d2e7f1a9b3c5d7e9f0a1
+  expirationMs: 86400000
+server:
+  port: 8080
+logging:
+  level:
+    root: INFO
+    com.fintrack: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:fintrackdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/fintrackdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${SPRING_DATASOURCE_USERNAME:dbuser}
+    password: ${SPRING_DATASOURCE_PASSWORD:dbpassword}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    database-platform: org.hibernate.dialect.MySQLDialect

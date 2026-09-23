@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack AI - Real-Time Dashboard</title>
+    <!-- Outfit Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #090d16 0%, #111326 50%, #060913 100%);
+            --panel-bg: rgba(20, 26, 46, 0.45);
+            --panel-border: rgba(99, 102, 241, 0.15);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-purple: #a855f7;
+            --accent-indigo: #6366f1;
+            --accent-teal: #14b8a6;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.25);
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1.5rem 2rem;
+            backdrop-filter: blur(10px);
+            background: rgba(9, 13, 22, 0.8);
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-indigo));
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ws-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--panel-border);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .ws-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-rose);
+            box-shadow: 0 0 10px var(--accent-rose);
+        }
+
+        .ws-dot.connected {
+            background: var(--accent-teal);
+            box-shadow: 0 0 10px var(--accent-teal);
+        }
+
+        .main-container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            flex-grow: 1;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .glass-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 12px 40px 0 rgba(99, 102, 241, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-title i {
+            color: var(--accent-indigo);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            transition: var(--transition-smooth);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.5rem;
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-indigo);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.15);
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        .form-input:focus + i {
+            color: var(--accent-indigo);
+        }
+
+        .btn {
+            padding: 0.85rem 1.5rem;
+            border-radius: 12px;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: var(--transition-smooth);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-indigo));
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn-teal {
+            background: linear-gradient(135deg, var(--accent-teal), #0d9488);
+            color: white;
+            box-shadow: 0 4px 15px rgba(20, 184, 166, 0.2);
+        }
+
+        .btn-teal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(20, 184, 166, 0.4);
+        }
+
+        /* Notifications styling */
+        .notification-feed {
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding-right: 0.5rem;
+        }
+
+        /* Custom scrollbar */
+        .notification-feed::-webkit-scrollbar {
+            width: 6px;
+        }
+        .notification-feed::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .notification-feed::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .empty-notifications {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 4rem 0;
+            color: var(--text-secondary);
+        }
+
+        .empty-notifications i {
+            font-size: 3rem;
+            opacity: 0.3;
+        }
+
+        .alert-card {
+            padding: 1.25rem;
+            border-radius: 14px;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .alert-card.alert-danger {
+            background: rgba(244, 63, 94, 0.1);
+            border-left: 4px solid var(--accent-rose);
+            border-top: 1px solid rgba(244, 63, 94, 0.15);
+            border-right: 1px solid rgba(244, 63, 94, 0.15);
+            border-bottom: 1px solid rgba(244, 63, 94, 0.15);
+        }
+
+        .alert-card.alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--accent-amber);
+            border-top: 1px solid rgba(245, 158, 11, 0.15);
+            border-right: 1px solid rgba(245, 158, 11, 0.15);
+            border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+        }
+
+        .alert-icon {
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 24px;
+        }
+
+        .alert-danger .alert-icon {
+            color: var(--accent-rose);
+        }
+
+        .alert-warning .alert-icon {
+            color: var(--accent-amber);
+        }
+
+        .alert-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            flex-grow: 1;
+        }
+
+        .alert-message {
+            font-size: 0.95rem;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .alert-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .token-card {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--panel-border);
+            padding: 1rem;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .token-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .token-string {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--accent-teal);
+            word-break: break-all;
+            background: rgba(0,0,0,0.25);
+            padding: 0.5rem;
+            border-radius: 6px;
+            max-height: 60px;
+            overflow-y: auto;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(17, 24, 39, 0.95);
+            border: 1px solid var(--accent-indigo);
+            box-shadow: var(--shadow-glow);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-success i {
+            color: var(--accent-teal);
+        }
+
+        .toast-error i {
+            color: var(--accent-rose);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <div class="logo-icon">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div class="logo-text">FinTrack AI</div>
+        </div>
+        
+        <div class="ws-badge">
+            <div class="ws-dot" id="ws-dot"></div>
+            <span id="ws-status">Disconnected</span>
+        </div>
+    </header>
+
+    <div class="main-container">
+        
+        <!-- Left Side: User Login, Set Budget & Expense Logs -->
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+            
+            <!-- Auth Card -->
+            <div class="glass-card" id="auth-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fa-solid fa-user-shield"></i>
+                        Security & Authentication
+                    </h2>
+                </div>
+                
+                <div class="form-group">
+                    <label>Registration & Login</label>
+                    <div class="input-row">
+                        <div class="input-wrapper">
+                            <input type="text" id="auth-name" class="form-input" placeholder="Full Name (for register)">
+                            <i class="fa-solid fa-signature"></i>
+                        </div>
+                        <div class="input-wrapper">
+                            <input type="email" id="auth-email" class="form-input" placeholder="Email Address" value="user@example.com">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                    </div>
+                    <div class="input-wrapper" style="margin-top: 1rem;">
+                        <input type="password" id="auth-password" class="form-input" placeholder="Password" value="password123">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-primary" onclick="handleAuth('login')" style="flex-grow: 1;">
+                        <i class="fa-solid fa-sign-in-alt"></i> Login
+                    </button>
+                    <button class="btn btn-teal" onclick="handleAuth('register')" style="flex-grow: 1;">
+                        <i class="fa-solid fa-user-plus"></i> Register
+                    </button>
+                </div>
+
+                <div class="token-card" id="token-card" style="display: none;">
+                    <div class="token-header">
+                        <span>Authenticated User: <strong id="token-user"></strong></span>
+                        <span id="token-role" style="color: var(--accent-purple); font-weight:600;"></span>
+                    </div>
+                    <div class="token-string" id="token-val"></div>
+                </div>
+            </div>
+
+            <!-- Configuration & Actions Card -->
+            <div class="glass-card" id="actions-card" style="opacity: 0.5; pointer-events: none;">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fa-solid fa-wallet"></i>
+                        Set Monthly Budget
+                    </h2>
+                </div>
+                
+                <div class="input-row">
+                    <div class="form-group">
+                        <label>Month</label>
+                        <div class="input-wrapper">
+                            <input type="month" id="budget-month" class="form-input" value="2026-05">
+                            <i class="fa-solid fa-calendar"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Limit ($)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="budget-limit" class="form-input" placeholder="e.g. 500" value="100">
+                            <i class="fa-solid fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="setBudget()">
+                    <i class="fa-solid fa-sliders"></i> Apply Budget Limit
+                </button>
+            </div>
+
+            <!-- Expense Logger Card -->
+            <div class="glass-card" id="expense-card" style="opacity: 0.5; pointer-events: none;">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fa-solid fa-receipt"></i>
+                        Log New Expense
+                    </h2>
+                </div>
+                
+                <div class="input-row">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="expense-title" class="form-input" placeholder="e.g. Weekly Grocery">
+                            <i class="fa-solid fa-tag"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount ($)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="expense-amount" class="form-input" placeholder="0.00" value="85">
+                            <i class="fa-solid fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <div class="input-wrapper">
+                            <select id="expense-category" class="form-input" style="padding-left: 2.5rem;">
+                                <option value="Food">Food</option>
+                                <option value="Utilities">Utilities</option>
+                                <option value="Rent">Rent</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Transportation">Transportation</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <i class="fa-solid fa-folder-open"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <div class="input-wrapper">
+                            <input type="date" id="expense-date" class="form-input">
+                            <i class="fa-solid fa-calendar-day"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-teal" onclick="logExpense()">
+                    <i class="fa-solid fa-paper-plane"></i> Save Expense
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Right Side: Live WebSocket alerts feed -->
+        <div class="glass-card" style="max-height: 100%;">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fa-solid fa-tower-broadcast" style="color: var(--accent-teal);"></i>
+                    Live WebSocket Notifications
+                </h2>
+            </div>
+            
+            <div class="notification-feed" id="notification-feed">
+                <div class="empty-notifications" id="empty-notif">
+                    <i class="fa-solid fa-satellite-dish"></i>
+                    <p>No active WebSocket connection. Authenticate above to start.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast elements -->
+    <div class="toast" id="toast">
+        <i class="fa-solid" id="toast-icon"></i>
+        <span id="toast-msg">Notification text</span>
+    </div>
+
+    <!-- SocketJS & STOMP CDN Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <script>
+        let jwtToken = '';
+        let currentUserEmail = '';
+        let currentUserName = '';
+        let stompClient = null;
+
+        // Set default date picker to today
+        document.getElementById('expense-date').valueAsDate = new Date();
+
+        function showToast(message, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-msg');
+
+            msg.textContent = message;
+            toast.className = 'toast show ' + (isSuccess ? 'toast-success' : 'toast-error');
+            icon.className = 'fa-solid ' + (isSuccess ? 'fa-circle-check' : 'fa-circle-exclamation');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        async function handleAuth(type) {
+            const name = document.getElementById('auth-name').value;
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+
+            if (!email || !password) {
+                showToast("Email and Password are required", false);
+                return;
+            }
+
+            const body = type === 'register' ? { name, email, password } : { email, password };
+            const endpoint = `/api/auth/${type}`;
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    jwtToken = data.token;
+                    currentUserEmail = data.email;
+                    currentUserName = data.name;
+
+                    document.getElementById('token-user').textContent = currentUserName;
+                    document.getElementById('token-role').textContent = `[${data.role}]`;
+                    document.getElementById('token-val').textContent = jwtToken;
+                    document.getElementById('token-card').style.display = 'flex';
+
+                    // Enable panels
+                    document.getElementById('actions-card').style.opacity = '1';
+                    document.getElementById('actions-card').style.pointerEvents = 'all';
+                    document.getElementById('expense-card').style.opacity = '1';
+                    document.getElementById('expense-card').style.pointerEvents = 'all';
+
+                    showToast(`${type === 'login' ? 'Logged in' : 'Registered'} successfully!`);
+                    
+                    // Connect to WebSocket
+                    connectWebSocket();
+                } else {
+                    showToast(data.message || "Authentication failed", false);
+                }
+            } catch (err) {
+                showToast("Unable to connect to server.", false);
+            }
+        }
+
+        function connectWebSocket() {
+            // Disconnect old socket if open
+            if (stompClient !== null) {
+                stompClient.disconnect();
+            }
+
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.debug = null; // Mute debug logging in console
+
+            const statusText = document.getElementById('ws-status');
+            const statusDot = document.getElementById('ws-dot');
+            statusText.textContent = "Connecting...";
+
+            stompClient.connect({}, function (frame) {
+                statusText.textContent = `Connected as ${currentUserName}`;
+                statusDot.classList.add('connected');
+
+                // Clear default empty notification
+                document.getElementById('empty-notif').style.display = 'none';
+
+                // Subscribe to user specific topic
+                stompClient.subscribe('/topic/notifications/' + currentUserEmail, function (notification) {
+                    const alertPayload = JSON.parse(notification.body);
+                    addAlertToFeed(alertPayload.message);
+                });
+
+                showToast("Real-time alerts active.");
+            }, function (error) {
+                statusText.textContent = "Disconnected";
+                statusDot.classList.remove('connected');
+                showToast("WebSocket connection failed.", false);
+            });
+        }
+
+        function addAlertToFeed(message) {
+            const feed = document.getElementById('notification-feed');
+            const alertCard = document.createElement('div');
+            
+            const isExceeded = message.includes("exceeded");
+            alertCard.className = `alert-card ${isExceeded ? 'alert-danger' : 'alert-warning'}`;
+
+            const iconClass = isExceeded ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-bell';
+            
+            const timeString = new Date().toLocaleTimeString();
+
+            alertCard.innerHTML = `
+                <div class="alert-icon">
+                    <i class="${iconClass}"></i>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-message">${message}</div>
+                    <div class="alert-time">${timeString}</div>
+                </div>
+            `;
+
+            // Insert at top of feed
+            feed.insertBefore(alertCard, feed.firstChild);
+        }
+
+        async function setBudget() {
+            const month = document.getElementById('budget-month').value;
+            const limit = document.getElementById('budget-limit').value;
+
+            if (!month || !limit) {
+                showToast("Month and Limit are required.", false);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/budgets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + jwtToken
+                    },
+                    body: JSON.stringify({ month, monthlyLimit: parseFloat(limit) })
+                });
+
+                if (response.ok) {
+                    showToast(`Budget limit of $${limit} set for ${month}.`);
+                } else {
+                    const data = await response.json();
+                    showToast(data.message || "Failed to set budget", false);
+                }
+            } catch (err) {
+                showToast("Network error.", false);
+            }
+        }
+
+        async function logExpense() {
+            const title = document.getElementById('expense-title').value;
+            const amount = document.getElementById('expense-amount').value;
+            const categoryName = document.getElementById('expense-category').value;
+            const date = document.getElementById('expense-date').value;
+
+            if (!title || !amount || !categoryName || !date) {
+                showToast("All expense fields are required.", false);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/expenses', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + jwtToken
+                    },
+                    body: JSON.stringify({
+                        title,
+                        amount: parseFloat(amount),
+                        categoryName,
+                        date
+                    })
+                });
+
+                if (response.ok) {
+                    showToast(`Expense "${title}" saved successfully!`);
+                    document.getElementById('expense-title').value = '';
+                } else {
+                    const data = await response.json();
+                    showToast(data.message || "Failed to save expense", false);
+                }
+            } catch (err) {
+                showToast("Network error.", false);
+            }
+        }
+    </script>
+</body>
+</html>
